@@ -1,0 +1,122 @@
+#lang racket
+
+; 1 set-equal?
+; Takes in lists which represent a set of integers.
+; Returns #t if sets are equal, #f otherwise.
+(define (set-equal? set1 set2 )
+  (equal? (list->set set1)
+          (list->set set2)))
+
+; 2 nested-set-equal
+; Identical to 1, but sets can contain other sets
+; First flatten the set to remove sets within sets. 
+(define (flatten set1)
+  (cond ((null? set1) '())
+        ((pair? set1)
+         (append (flatten (car set1)) (flatten (cdr set1))))
+        (else (list set1))))
+; Now using the flatten function,
+; we can compare using 'set-equal?' from above.
+(define (nested-set-equal? set1 set2)
+  (set-equal? (flatten set1)(flatten set2)))
+
+; 3 union
+; Expects two lists, each of which represeents a set of integers.
+; Returns the union of the two sets, with no repetitions.
+; This was the first instance of recursion I wrote
+; (I wrote this prior to writing 'nested-set-equals' from above).
+(define (union set1 set2)
+  (cond ((null? set2) set1)
+        ((member (car set2) set1)
+         (union set1 (cdr set2)))
+        (else (union (cons (car set2) set1) (cdr set2)))))
+
+; 4 intersection
+; Expects two lists, each of which represents a set of integers.
+; Returns the intersection of the two sets
+; (every element that is present in both sets, with no reperitions).
+(define intersection
+  (lambda (set1 set2)
+    (cond
+      ((null? set1)(quote ()))
+      ((member (car set1) set2)
+       (cons (car set1)
+             (intersection (cdr set1) set2)))
+      (else (intersection (cdr set1) set2)))))
+
+; 5 mergesort
+; Expects a flat (no sub-lists) list of integers.
+; Sorts the integers usng the merge sort algorithm and
+; return the resulting sorted list.
+; The merge function only merges ordered sets.
+(define (merge set1 set2)
+  (cond
+    ;if set1 is empty, return set2
+    [(null? set1) set2]
+    ;if set2 is empty, return set1
+    [(null? set2) set1]
+    ;if the head of set1 is bigger than head of set2
+    [(< (car set1) (car set2))
+     ;cons head set1 to (recurse)
+     (cons (car set1) (merge (cdr set1) set2))]
+    ;cons head set 2 to (recurse)
+    [#t (cons (car set2) (merge set1 (cdr set2)))]))
+
+; 'mergesort' splits the initial set to be ordered using 'merge' recursion.
+(define (mergesort set1)
+  (cond
+    [(or (null? set1) (null? (cdr set1))) set1]
+    [(null? (cddr set1))
+     (merge (list (car set1)) (cdr set1))]
+    [#t
+     (let ([x (ceiling (/ (length set1) 2))])
+       (merge (mergesort (take set1 x))
+              (mergesort (drop set1 x))))]))
+
+; 6 powerset
+;
+(define (powerset set1)
+  (cond
+    [(empty? set1) (list empty)]
+    [else
+     (combine (first set1)
+              (powerset (rest set1)))]))
+
+; set2 is the recursive result
+(define (combine set1 set2)                      
+  (cond
+    [(empty? set2)  empty]              ; nothing to combine `x` with
+    [else
+     (cons (cons set1 (first set2))       ; Both add `x` and
+           (cons (first set2)            ;   don't add, to first subset in `r`
+                 (combine               ; and do the same
+                  set1                ;   with 
+                  (rest set2))))]))   ;   the rest of `r`
+
+; 6 powerset
+; Expects a flat (no sub-lists) list of integers.
+; Returns a list of lists representing the powerset of the input set.
+; The powerset of a set is the set of all subsets of the original set.
+(define (powerset set1)
+  (cond
+    [(empty? set1) (list empty)]
+    [else
+     (combine (first set1)
+              (powerset (rest set1)))]))
+
+; set2 is the recursive result
+(define (combine set1 set2)                      
+  (cond
+    ; When there is nothing to combine with set1.
+    [(empty? set2)  empty]              
+    [else
+     ; When there is something still to combine with set1.
+     (cons (cons set1 (first set2))      
+           (cons (first set2)           
+                 (combine               
+                  set1                
+                  (rest set2))))]))  
+
+
+; 7 nested-reduce
+; I couldn't figure this one out...
